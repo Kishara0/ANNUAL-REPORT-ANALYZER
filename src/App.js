@@ -32,7 +32,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const chatEndRef = useRef(null);
-  const backendUrl = 'https://15.207.98.195/';
+  const backendUrl = 'http://13.232.198.216/';
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
