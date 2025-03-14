@@ -119,7 +119,7 @@ const App = () => {
         },
         tooltip: { enabled: true },
         datalabels: {
-          display: (context) => context.chart.config.type === 'bar', // Show labels only for bar charts
+          display: (context) => context.chart.config.type === 'bar',
           anchor: 'end',
           align: 'top',
           formatter: (value) => value.toFixed(1),
@@ -214,7 +214,7 @@ const App = () => {
       </header>
 
       <main className="app-main">
-        <div className="upload-container">
+        {/* <div className="upload-container">
           <input
             type="file"
             accept=".pdf"
@@ -228,7 +228,7 @@ const App = () => {
           >
             {loading ? <span className="spinner"></span> : 'Upload PDF'}
           </button>
-        </div>
+        </div> */}
 
         <div className="chat-container">
           <div className="chat-messages">
