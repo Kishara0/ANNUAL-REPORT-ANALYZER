@@ -12,8 +12,10 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import './App.css';
 
+// Register ChartJS components and the datalabels plugin
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -22,7 +24,8 @@ ChartJS.register(
   PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 const App = () => {
@@ -32,8 +35,8 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const chatEndRef = useRef(null);
-  const backendUrl = 'http://13.234.31.155/';
- 
+  const backendUrl = 'http://13.232.198.216/';
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
@@ -94,6 +97,12 @@ const App = () => {
       labels: [],
       datasets: [],
     };
+
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
+      '#D4A5A5', '#9B59B6', '#3498DB', '#E74C3C', '#2ECC71',
+    ];
+
     const options = {
       responsive: true,
       animation: {
@@ -102,35 +111,28 @@ const App = () => {
       },
       plugins: {
         legend: { position: 'top', labels: { color: '#000' } },
-        title: { 
-          display: true, 
+        title: {
+          display: true,
           text: `${graph_type.replace('_', ' ').toUpperCase()} - Analysis`,
           color: '#000',
-          font: { size: 16 }
+          font: { size: 16 },
         },
         tooltip: { enabled: true },
-      },
-      scales: {
-        y: { 
-          beginAtZero: true, 
-          title: { display: true, text: 'Value', color: '#000' },
-          ticks: { color: '#000' }
-        },
-        x: { 
-          title: { display: true, text: 'Categories', color: '#000' },
-          ticks: { color: '#000' }
+        datalabels: {
+          display: (context) => context.chart.config.type === 'bar', // Show labels only for bar charts
+          anchor: 'end',
+          align: 'top',
+          formatter: (value) => value.toFixed(1),
+          color: '#000',
+          font: { weight: 'bold' },
         },
       },
+      scales: {},
     };
-
-    const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD',
-      '#D4A5A5', '#9B59B6', '#3498DB', '#E74C3C', '#2ECC71'
-    ];
 
     switch (graph_type) {
       case 'line_chart':
-        chartData.labels = data_array.map(item => item.month || Object.keys(item)[0]);
+        chartData.labels = data_array.map(item => item.month || item.year || Object.keys(item)[0]);
         chartData.datasets = [{
           label: 'Value Over Time',
           data: data_array.map(item => item.value || Object.values(item)[1]),
@@ -139,20 +141,39 @@ const App = () => {
           fill: true,
           tension: 0.4,
         }];
+        options.scales = {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Value', color: '#000' },
+            ticks: { color: '#000' },
+          },
+          x: {
+            title: { display: true, text: 'Time', color: '#000' },
+            ticks: { color: '#000' },
+          },
+        };
         return <Line data={chartData} options={options} />;
 
       case 'bar_chart':
-        chartData.labels = data_array.map(item => item.Model || item.category || Object.keys(item)[0]);
-        const barKeys = Object.keys(data_array[0]).filter(
-          key => key !== 'Model' && key !== 'category' && data_array[0][key] !== null
-        );
-        chartData.datasets = barKeys.map((key, idx) => ({
-          label: key,
-          data: data_array.map(item => item[key]),
-          backgroundColor: colors[idx % colors.length],
-          borderColor: colors[idx % colors.length],
+        chartData.labels = data_array.map(item => item.category || item.Model || Object.keys(item)[0]);
+        chartData.datasets = [{
+          label: 'Revenue',
+          data: data_array.map(item => item.value || Object.values(item)[1]),
+          backgroundColor: colors[0],
+          borderColor: colors[0],
           borderWidth: 1,
-        }));
+        }];
+        options.scales = {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Revenue ($ million)', color: '#000' },
+            ticks: { color: '#000' },
+          },
+          x: {
+            title: { display: true, text: 'Categories', color: '#000' },
+            ticks: { color: '#000' },
+          },
+        };
         return <Bar data={chartData} options={options} />;
 
       case 'stack_bar_chart':
@@ -166,8 +187,19 @@ const App = () => {
           backgroundColor: colors[idx % colors.length],
           stack: 'Stack 0',
         }));
-        options.scales.x = { stacked: true };
-        options.scales.y = { stacked: true };
+        options.scales = {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Revenue ($ million)', color: '#000' },
+            ticks: { color: '#000' },
+            stacked: true,
+          },
+          x: {
+            title: { display: true, text: 'Categories', color: '#000' },
+            ticks: { color: '#000' },
+            stacked: true,
+          },
+        };
         return <Bar data={chartData} options={options} />;
 
       default:
@@ -183,15 +215,15 @@ const App = () => {
 
       <main className="app-main">
         <div className="upload-container">
-          <input 
-            type="file" 
-            accept=".pdf" 
-            onChange={handleFileChange} 
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
             className="file-input"
           />
-          <button 
-            onClick={handleUpload} 
-            disabled={loading} 
+          <button
+            onClick={handleUpload}
+            disabled={loading}
             className="action-btn upload-btn"
           >
             {loading ? <span className="spinner"></span> : 'Upload PDF'}
@@ -236,9 +268,9 @@ const App = () => {
               disabled={loading}
               onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
             />
-            <button 
-              onClick={handleAskQuestion} 
-              disabled={loading} 
+            <button
+              onClick={handleAskQuestion}
+              disabled={loading}
               className="action-btn send-btn"
             >
               {loading ? <span className="spinner"></span> : 'Send'}
